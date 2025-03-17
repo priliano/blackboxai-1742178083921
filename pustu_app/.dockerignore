@@ -1,0 +1,153 @@
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# Flutter/Dart specific
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+coverage/
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+
+# IDE specific
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.settings/
+.classpath
+.project
+
+# Dependencies
+**/node_modules/
+**/ios/Pods/
+**/android/.gradle
+**/android/app/debug
+**/android/app/profile
+**/android/app/release
+
+# Documentation
+doc/
+docs/
+README.md
+CHANGELOG.md
+CONTRIBUTING.md
+LICENSE
+*.md
+
+# Development files
+*.env*
+!.env.example
+*.log
+*.sqlite
+*.db
+*.pid
+*.seed
+*.pid.lock
+
+# Test files
+test/
+integration_test/
+*_test.dart
+*_test.mocks.dart
+
+# Generated files
+*.g.dart
+*.freezed.dart
+*.mocks.dart
+*.config.dart
+generated/
+generated_plugin_registrant.dart
+
+# Build artifacts
+*.apk
+*.ipa
+*.aab
+*.app
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Docker files (to prevent recursion)
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*~.nib
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Firebase
+google-services.json
+GoogleService-Info.plist
+firebase_app_id_file.json
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+
+# Code signing
+*.jks
+*.keystore
+*.p12
+*.key
+*.mobileprovision
+*.provisionprofile
+*.cer
+*.certSigningRequest
+*.p8
+
+# Other
+.env
+.env.*
+*.pem
+*.crt
+*.key
+*.csr
+*.srl
+*.orig
+*.rej
+*.swo
+*.swp
+*.vi
+*~
+*.sass-cache
+.phpunit.result.cache
+
+# Keep these files
+!.env.example
+!README.md
+!CHANGELOG.md
+!LICENSE
