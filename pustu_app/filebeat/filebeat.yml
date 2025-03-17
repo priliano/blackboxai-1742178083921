@@ -1,0 +1,132 @@
+filebeat.inputs:
+- type: log
+  enabled: true
+  paths:
+    - /var/log/pustu/api/*.log
+  fields:
+    app: pustu
+    component: api
+  fields_under_root: true
+  json.keys_under_root: true
+  json.overwrite_keys: true
+  json.add_error_key: true
+  json.message_key: message
+
+- type: log
+  enabled: true
+  paths:
+    - /var/log/pustu/queue/*.log
+  fields:
+    app: pustu
+    component: queue
+  fields_under_root: true
+  json.keys_under_root: true
+  json.overwrite_keys: true
+  json.add_error_key: true
+  json.message_key: message
+
+- type: log
+  enabled: true
+  paths:
+    - /var/log/pustu/notification/*.log
+  fields:
+    app: pustu
+    component: notification
+  fields_under_root: true
+  json.keys_under_root: true
+  json.overwrite_keys: true
+  json.add_error_key: true
+  json.message_key: message
+
+- type: log
+  enabled: true
+  paths:
+    - /var/log/nginx/access.log
+  fields:
+    app: pustu
+    component: nginx
+    type: access
+  fields_under_root: true
+
+- type: log
+  enabled: true
+  paths:
+    - /var/log/nginx/error.log
+  fields:
+    app: pustu
+    component: nginx
+    type: error
+  fields_under_root: true
+
+processors:
+  - add_host_metadata:
+      when.not.contains.tags: forwarded
+  - add_cloud_metadata: ~
+  - add_docker_metadata: ~
+  - add_kubernetes_metadata: ~
+  - decode_json_fields:
+      fields: ["message"]
+      target: ""
+      overwrite_keys: true
+  - timestamp:
+      field: "@timestamp"
+      layouts:
+        - '2006-01-02T15:04:05Z07:00'
+        - '2006-01-02T15:04:05.999Z07:00'
+  - drop_fields:
+      fields: ["agent", "ecs", "input", "log"]
+  - rename:
+      fields:
+        - from: "host"
+          to: "hostname"
+  - add_fields:
+      target: ""
+      fields:
+        environment: ${ENVIRONMENT:production}
+        region: asia-southeast1
+
+output.elasticsearch:
+  hosts: ["${ELASTICSEARCH_HOSTS}"]
+  username: "${ELASTICSEARCH_USERNAME}"
+  password: "${ELASTICSEARCH_PASSWORD}"
+  index: "pustu-logs-%{[fields.component]}-%{+yyyy.MM.dd}"
+  pipeline: "pustu-pipeline"
+  ssl:
+    enabled: ${ELASTICSEARCH_SSL_ENABLED:true}
+    verification_mode: ${ELASTICSEARCH_SSL_VERIFICATION_MODE:full}
+    certificate_authorities: ${ELASTICSEARCH_SSL_CERTIFICATE_AUTHORITIES}
+
+setup.template.name: "pustu"
+setup.template.pattern: "pustu-*"
+setup.template.settings:
+  index.number_of_shards: 3
+  index.number_of_replicas: 1
+  index.refresh_interval: "5s"
+
+setup.kibana:
+  host: "${KIBANA_HOST}"
+  username: "${KIBANA_USERNAME}"
+  password: "${KIBANA_PASSWORD}"
+  ssl:
+    enabled: ${KIBANA_SSL_ENABLED:true}
+    verification_mode: ${KIBANA_SSL_VERIFICATION_MODE:full}
+    certificate_authorities: ${KIBANA_SSL_CERTIFICATE_AUTHORITIES}
+
+monitoring:
+  enabled: true
+  elasticsearch:
+    username: "${MONITORING_USERNAME}"
+    password: "${MONITORING_PASSWORD}"
+
+logging.level: info
+logging.to_files: true
+logging.files:
+  path: /var/log/filebeat
+  name: filebeat
+  keepfiles: 7
+  permissions: 0644
+
+queue.mem:
+  events: 4096
+  flush.min_events: 512
+  flush.timeout: "5s"
