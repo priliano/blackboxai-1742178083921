@@ -1,0 +1,161 @@
+# Jaeger configuration for PUSTU Queue App
+agent:
+  host-port: "0.0.0.0:6831"
+  http-server-host-port: "0.0.0.0:5778"
+  tags:
+    - key: environment
+      value: production
+    - key: service
+      value: pustu-queue
+
+collector:
+  zipkin:
+    host-port: "9411"
+  grpc-server:
+    host-port: "14250"
+  http-server:
+    host-port: "14268"
+  queue-size: 100000
+  num-workers: 50
+  tags:
+    - key: environment
+      value: production
+
+ingester:
+  deadlockInterval: 1s
+  kafka:
+    brokers: "kafka:9092"
+    topic: jaeger-spans
+    encoding: protobuf
+    consumer-group: jaeger-ingester
+
+query:
+  host-port: "0.0.0.0:16686"
+  base-path: /jaeger
+  additional-headers:
+    - Access-Control-Allow-Origin
+    - Access-Control-Allow-Credentials
+    - Access-Control-Allow-Headers
+  cache-ttl: 1h
+  ui-config:
+    menu:
+      - label: About
+        url: https://www.pustuapp.com/about
+    dependencies:
+      menuEnabled: true
+    tracking:
+      gaID: UA-000000-0
+    refresh: 5000
+    deepDependencies: 5
+
+storage:
+  type: elasticsearch
+  options:
+    es:
+      server-urls: http://elasticsearch:9200
+      username: elastic
+      password: ${ELASTIC_PASSWORD}
+      index-prefix: jaeger
+      tags-as-fields:
+        all: true
+      version: 7
+      num-shards: 3
+      num-replicas: 1
+      max-doc-count: 10000
+      bulk:
+        size: 5000000
+        workers: 1
+        flush-interval: 200ms
+      timeout: 15s
+      tls:
+        enabled: false
+
+sampling:
+  strategies:
+    - service: pustu-api
+      type: probabilistic
+      param: 1.0
+    - service: pustu-queue
+      type: probabilistic
+      param: 1.0
+    - service: pustu-notification
+      type: probabilistic
+      param: 0.5
+    - service: pustu-web
+      type: probabilistic
+      param: 0.1
+    - service: default
+      type: probabilistic
+      param: 0.1
+
+metrics:
+  backend: prometheus
+  prometheus:
+    server-url: http://prometheus:9090
+  tags:
+    - key: environment
+      value: production
+
+processor:
+  jaeger-compact:
+    workers: 50
+    queue-size: 2000
+  jaeger-binary:
+    workers: 50
+    queue-size: 2000
+  zipkin-json:
+    workers: 50
+    queue-size: 2000
+
+admin:
+  http:
+    host-port: "0.0.0.0:14269"
+
+health-check:
+  http-port: 14269
+
+dependencies:
+  dag:
+    enabled: true
+    update-interval: 1m
+
+logging:
+  level: info
+  format: json
+
+tags:
+  environment: production
+  deployment: pustu-queue
+  region: asia-southeast1
+
+service_mapping:
+  rules:
+    - regex: '^pustu-(.*)$'
+      name: 'pustu-${1}'
+    - regex: '.*'
+      name: unknown
+
+adaptive-sampling:
+  enabled: true
+  bursting: true
+  target-samples-per-second: 100
+
+discovery:
+  static:
+    - host: pustu-api
+      port: 8000
+      svc: api
+    - host: pustu-queue
+      port: 8001
+      svc: queue
+    - host: pustu-notification
+      port: 8002
+      svc: notification
+
+badger:
+  directory-key: /badger/key
+  directory-value: /badger/value
+  ephemeral: false
+  consistency: strong
+  value-log-file-size: 1073741824
+  span-store-ttl: 72h0m0s
