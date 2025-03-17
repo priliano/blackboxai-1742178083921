@@ -1,0 +1,150 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - alertmanager:9093
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'pustu_web'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['web:80']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: '(.*)'
+        replacement: 'web-$1'
+
+  - job_name: 'pustu_api'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['api:8000']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: '(.*)'
+        replacement: 'api-$1'
+
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['db:9187']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: '(.*)'
+        replacement: 'postgres-$1'
+
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:9121']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: '(.*)'
+        replacement: 'redis-$1'
+
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:9113']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: '(.*)'
+        replacement: 'nginx-$1'
+
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: '(.*)'
+        replacement: 'node-$1'
+
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: '(.*)'
+        replacement: 'container-$1'
+
+  - job_name: 'pushgateway'
+    honor_labels: true
+    static_configs:
+      - targets: ['pushgateway:9091']
+
+# Alert rules
+alerting_rules:
+  groups:
+    - name: basic_alerts
+      rules:
+        - alert: InstanceDown
+          expr: up == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Instance {{ $labels.instance }} down"
+            description: "{{ $labels.instance }} has been down for more than 5 minutes."
+
+        - alert: HighLoad
+          expr: node_load1 > 10
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High load on {{ $labels.instance }}"
+            description: "{{ $labels.instance }} has high load for more than 5 minutes."
+
+        - alert: HighMemoryUsage
+          expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 85
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High memory usage on {{ $labels.instance }}"
+            description: "{{ $labels.instance }} has high memory usage for more than 5 minutes."
+
+        - alert: HighCPUUsage
+          expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High CPU usage on {{ $labels.instance }}"
+            description: "{{ $labels.instance }} has high CPU usage for more than 5 minutes."
+
+        - alert: DiskSpaceRunningOut
+          expr: node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"} * 100 < 10
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Disk space running out on {{ $labels.instance }}"
+            description: "{{ $labels.instance }} has less than 10% disk space available."
+
+# Recording rules for common queries
+recording_rules:
+  groups:
+    - name: node_rules
+      rules:
+        - record: job:node_memory_utilization:avg
+          expr: 100 - (avg by (job) (node_memory_MemAvailable_bytes) / avg by (job) (node_memory_MemTotal_bytes) * 100)
+
+        - record: job:node_cpu_utilization:avg
+          expr: 100 - (avg by (job) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
