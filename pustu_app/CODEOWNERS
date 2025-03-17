@@ -1,0 +1,78 @@
+# This is a CODEOWNERS file.
+# Each line is a file pattern followed by one or more owners.
+# Order is important; the last matching pattern takes precedence.
+
+# These owners will be the default owners for everything in
+# the repo unless a later match takes precedence.
+* @project-lead
+
+# Core app files
+/lib/main.dart @app-architect
+/lib/constants/ @app-architect
+/lib/utils/ @app-architect
+
+# Models
+/lib/models/ @data-team
+
+# Services
+/lib/services/ @backend-team
+/lib/services/api_service.dart @backend-team
+/lib/services/auth_service.dart @security-team
+/lib/services/notification_service.dart @notification-team
+
+# State management
+/lib/providers/ @state-management-team
+
+# UI Components
+/lib/widgets/ @ui-team
+/lib/screens/ @ui-team
+
+# Authentication screens
+/lib/screens/auth/ @security-team
+
+# Queue management
+/lib/screens/queue/ @queue-team
+/lib/services/queue_service.dart @queue-team
+
+# Feedback system
+/lib/screens/feedback/ @feedback-team
+/lib/services/feedback_service.dart @feedback-team
+
+# Admin features
+/lib/screens/admin/ @admin-team
+
+# Staff features
+/lib/screens/petugas/ @staff-team
+
+# Display screen
+/lib/screens/display/ @display-team
+
+# Configuration files
+/pubspec.yaml @app-architect
+/analysis_options.yaml @app-architect
+/.env.example @security-team
+
+# Documentation
+/README.md @docs-team
+/CONTRIBUTING.md @docs-team
+/CHANGELOG.md @docs-team
+/LICENSE @legal-team
+/SECURITY.md @security-team
+/CODE_OF_CONDUCT.md @community-team
+
+# Assets
+/assets/ @design-team
+
+# Tests
+/test/ @qa-team
+/integration_test/ @qa-team
+
+# CI/CD
+/.github/ @devops-team
+/android/ @android-team
+/ios/ @ios-team
+
+# Dependencies
+/pubspec.lock @app-architect
+
+# Note: Replace the team names (e.g., @app-architect, @ui-team) with actual GitHub usernames or team names
